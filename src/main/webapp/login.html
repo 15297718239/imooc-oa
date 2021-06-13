@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>慕课网OA办公系统</title>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" type="text/css" href="assets/element-plus/index.css">
+    <!-- 引入组件库 -->
+    <script src="/assets/vue/vue.global.js"></script>
+    <script src="/assets/element-plus/index.full.js"></script>
+    <script src="/assets/axios/axios.js"></script>
+    <style>
+        .login-box{
+            border: 1px solid #DCDFE6;
+            width: 350px;
+            margin: 180px auto;
+            padding: 35px 35px 15px 35px;
+            border-radius: 5px;
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            box-shadow: 0 0 25px #909399;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <el-form ref="loginForm" lable-width="80px" class="login-box">
+
+        </el-form>
+    </div>
+    <script>
+        const Main = {
+            data(){
+                return {
+
+                }
+            }
+        };
+        //初始化Vue,绑定Main中的数据,利用ElementPlus对#app容器进行重新渲染
+        const app = Vue.createApp(Main);
+        app.use(ElementPlus);
+        app.mount("#app");
+    </script>
+</body>
+</html>
