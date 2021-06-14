@@ -66,6 +66,20 @@
                 form.validate((valid) => {
                     if(valid){
                         console.info("表单校验成功,准备提交数据");
+                        const form = this.form;
+                        const $message = this.$message;
+                        const params = new URLSearchParams();
+                        params.append("username", form.username);
+                        params.append("password", form.password);
+                        axios.post("/api/login", params, {}).then(function (response) {
+                            console.info(response);
+                            const json = response.data;
+                            if(json.code=="0"){
+                                window.location.href = "/index.html";
+                            }else{
+                                $message.error({message:json.message, offset: 100});
+                            }
+                        });
                     }
                 })
             }
