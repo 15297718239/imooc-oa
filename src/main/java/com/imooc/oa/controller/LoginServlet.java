@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.imooc.oa.entity.User;
 import com.imooc.oa.service.UserService;
+import com.imooc.oa.utils.ResponseUtils;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -30,24 +31,16 @@ public class LoginServlet extends HttpServlet {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
         //调用业务逻辑
-        Map result = new LinkedHashMap<>();
+        ResponseUtils resp = null;
         try {
             User user = userService.checkLogin(username, password);
             //处理结果编码,0代表处理成功,非0代表处理失败
-            result.put("code", "0");
-            result.put("message", "success");
-            Map data = new LinkedHashMap();
-            data.put("user", user);
-            result.put("data", data);
+            resp = new ResponseUtils().put("user", user);
         }catch (Exception e){
             e.printStackTrace();
-            result.put("code", e.getClass().getSimpleName());
-            result.put("message", e.getMessage());
+            resp = new ResponseUtils(e.getClass().getSimpleName(), e.getMessage());
         }
         //返回JSON结果
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        String json = objectMapper.writeValueAsString(result);
-        response.getWriter().println(json);
+        response.getWriter().println(resp.toJsonString());
     }
 }
