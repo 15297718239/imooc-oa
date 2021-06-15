@@ -27,7 +27,23 @@
     <div id="app">
         <el-container style="height:100%;border:1px solid #eee">
             <el-header>
-                我是Header
+                <el-row>
+                    <el-col :span="12">
+                        <span style="font-size: 18px;color:darkcyan">慕课网办公OA系统</span>
+                    </el-col>
+                    <el-col :span="12" style="text-align:right">
+                           <el-dropdown>
+                               <i class="el-icon-s-check" style="font-size:18px;margin-right: 15px">
+                                   <span style="margin-right: 15px">张三[研发工程师]</span>
+                               </i>
+                               <template #dropdown>
+                                   <el-dropdown-menu>
+                                       <el-dropdown-item>注销</el-dropdown-item>
+                                   </el-dropdown-menu>
+                               </template>
+                           </el-dropdown>
+                    </el-col>
+                </el-row>
             </el-header>
             <el-container>
                 <el-aside width="200px" style="max-height:100%;background-color: rgb(238, 241, 246)">
