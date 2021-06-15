@@ -38,7 +38,6 @@ public class UserInfoServlet extends HttpServlet {
         String json = new ResponseUtils().put("nodeList", treeList).toJsonString();
         response.setContentType("application/json;charset=utf-8");
         response.getWriter().println(json);
-
     }
 
     @Override

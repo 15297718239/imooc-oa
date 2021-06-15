@@ -75,6 +75,8 @@
                             console.info(response);
                             const json = response.data;
                             if(json.code=="0"){
+                                sessionStorage.uid=json.data.user.userId;
+                                sessionStorage.eid=json.data.user.employeeId;
                                 window.location.href = "/index.html";
                             }else{
                                 $message.error({message:json.message, offset: 100});
