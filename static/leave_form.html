@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>请假申请单</title>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" type="text/css" href="/assets/element-plus/index.css">
+    <!-- 引入组件库 -->
+    <script src="/assets/vue/vue.global.js"></script>
+    <script src="/assets/element-plus/index.full.js"></script>
+    <script src="/assets/element-plus/locale/zh-cn.js"></script>
+    <script src="/assets/axios/axios.js"></script>
+
+    <style>
+        .el-form {
+            border: 1px solid #DCDFE6;
+            width: 600px;
+            margin: 180px auto;
+            padding: 35px 35px 15px 35px;
+            border-radius: 5px;
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            box-shadow: 0 0 25px #909399;
+        }
+    </style>
+
+</head>
+<body>
+<div id="app">
+    <el-form ref="leaveForm" :model="form" :rules="rules" label-width="80px">
+        <el-descriptions title="请假申请单" :column="1" border>
+            <el-descriptions-item label="部门">研发部</el-descriptions-item>
+            <el-descriptions-item label="申请人">王美美[高级研发工程师]
+            </el-descriptions-item>
+            <el-descriptions-item label="请假类型">
+
+                <el-select v-model="form.formType" style="width: 100%">
+                    <el-option label="事假" value="1"></el-option>
+                    <el-option label="病假" value="2"></el-option>
+                    <el-option label="工伤假" value="3"></el-option>
+                    <el-option label="婚嫁" value="4"></el-option>
+                    <el-option label="产假" value="5"></el-option>
+                    <el-option label="丧假" value="6"></el-option>
+                </el-select>
+
+            </el-descriptions-item>
+            <el-descriptions-item label="请假时间">
+                <el-form-item prop="timeRange" label-width="0px">
+                    <div class="block">
+                        <el-date-picker
+                                v-model="form.timeRange"
+                                type="datetimerange"
+                                range-separator="至"
+                                start-placeholder="开始日期"
+                                end-placeholder="结束日期">
+                        </el-date-picker>
+                    </div>
+                </el-form-item>
+            </el-descriptions-item>
+            <el-descriptions-item label="请假原因">
+                <el-form-item prop="reason" label-width="0px">
+                    <el-input type="text" placeholder="请输入请假原因" v-model="form.reason"/>
+                </el-form-item>
+            </el-descriptions-item>
+
+        </el-descriptions>
+        <div style="text-align: center;padding-top: 30px">
+            <el-button type="primary" >立即申请</el-button>
+        </div>
+    </el-form>
+
+</div>
+
+<script>
+
+    var Main = {
+        data() {
+            return {
+                form: {
+                    formType: "1",
+                    timeRange: "",
+                    startTime: "",
+                    endTime: "",
+                    reason: "",
+                    eid: "",
+                },
+                // 表单验证，需要在 el-form-item 元素中增加 prop 属性
+                rules: {
+                    timeRange: [
+                        {required: true, message: '请选择请假时间', trigger: 'blur'}
+                    ],
+                    reason: [
+                        {required: true, message: '请填写请假原因', trigger: 'blur'}
+                    ]
+                }
+            }
+        }
+    };
+    ElementPlus.locale(ElementPlus.lang.zhCn);
+    const app = Vue.createApp(Main);
+    app.use(ElementPlus, ElementPlus.lang.zhCn);
+    app.mount("#app")
+</script>
+</body>
+</html>
