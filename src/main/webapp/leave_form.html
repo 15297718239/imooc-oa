@@ -52,7 +52,8 @@
                                 type="datetimerange"
                                 range-separator="至"
                                 start-placeholder="开始日期"
-                                end-placeholder="结束日期">
+                                end-placeholder="结束日期"
+                                @change="changeTimeRange">
                         </el-date-picker>
                     </div>
                 </el-form-item>
@@ -65,7 +66,7 @@
 
         </el-descriptions>
         <div style="text-align: center;padding-top: 30px">
-            <el-button type="primary" >立即申请</el-button>
+            <el-button type="primary" v-on:click="onSubmit('leaveForm')" >立即申请</el-button>
         </div>
     </el-form>
 
@@ -84,7 +85,7 @@
                     startTime: "",
                     endTime: "",
                     reason: "",
-                    eid: "",
+                    eid: ""
                 },
                 // 表单验证，需要在 el-form-item 元素中增加 prop 属性
                 rules: {
@@ -95,6 +96,42 @@
                         {required: true, message: '请填写请假原因', trigger: 'blur'}
                     ]
                 }
+            }
+        }
+        ,methods:{
+            changeTimeRange : function(){
+                console.info(this.form.timeRange);
+                this.form.startTime = this.form.timeRange[0].getTime();
+                this.form.endTime = this.form.timeRange[1].getTime();
+            }
+            ,onSubmit(formName){
+                const objApp = this;
+                const formData = this.form;
+                const $message = this.$message;
+                this.$refs[formName].validate(function(valid){
+                    if(valid){
+                        const params = new URLSearchParams();
+                        params.append("formType", formData.formType);
+                        params.append("startTime", formData.startTime);
+                        params.append("endTime", formData.endTime);
+                        params.append("reason", formData.reason);
+                        params.append("eid", sessionStorage.eid);
+                        axios.post("/api/leave/create",params)
+                            .then(function(response){
+                                console.info(response);
+                                const json = response.data;
+                                if(json.code == "0"){
+                                    objApp.$alert("请假单已提交,等待上级审批",{
+                                        callback:function(){
+                                            window.location.href = "/notice.html";
+                                        }
+                                    })
+                                }else{
+                                    $message.error({message:json.message,offset:100})
+                                }
+                            })
+                    }
+                })
             }
         }
         ,mounted(){
