@@ -129,6 +129,46 @@
                 this.dialogFormVisible = true;
             }
         }
+        ,mounted(){
+            const objApp = this;
+            const $message = this.$message;
+            axios.get("/api/leave/list?eid=" + sessionStorage.eid)
+                .then(function(response){
+                    const json = response.data;
+                    if(json.code == '0'){
+                        objApp.tableData.splice(0, objApp.tableData.length);
+                        const formList = json.data.list;
+                        formList.forEach(function(item){
+                            switch (item.form_type){
+                                case 1:
+                                    item.ftype = "事假";
+                                    break;
+                                case 2:
+                                    item.ftype = "病假";
+                                    break;
+                                case 3:
+                                    item.ftype = "工伤假";
+                                    break;
+                                case 4:
+                                    item.ftype = "婚假";
+                                    break;
+                                case 5:
+                                    item.ftype = "产假";
+                                    break;
+                                case 6:
+                                    item.ftype = "丧假";
+                                    break;
+                            }
+                            item.stime = formatDate(item.start_time);
+                            item.etime = formatDate(item.end_time);
+                            item.ctime = formatDate(item.create_time);
+                            objApp.tableData.push(item);
+                        })
+                    }else{
+                        $message.error({message:json.message,offset:100})
+                    }
+                })
+        }
     };
     const app = Vue.createApp(Main);
     app.use(ElementPlus);
