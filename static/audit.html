@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" type="text/css" href="/assets/element-plus/index.css">
+    <!-- 引入组件库 -->
+    <script src="/assets/vue/vue.global.js"></script>
+    <script src="/assets/element-plus/index.full.js"></script>
+    <script src="/assets/axios/axios.js"></script>
+    <style >
+
+        .info .el-col,.info .el-select ,.info .el-input{
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <h2>请假审批</h2>
+    <el-table
+            ref="singleTable"
+            :data="tableData"
+            highlight-current-row
+            @current-change="handleCurrentChange"
+            style="width: 100%">
+        <el-table-column
+                type="index"
+                width="50">
+        </el-table-column>
+        <el-table-column
+                property="ctime"
+                label="申请时间"
+                width="180">
+        </el-table-column>
+        <el-table-column
+                property="ftype"
+                label="类型"
+                width="120">
+        </el-table-column>
+        <el-table-column
+                property="department_name"
+                label="部门"
+                width="120">
+        </el-table-column>
+        <el-table-column
+                property="name"
+                label="员工"
+                width="120">
+        </el-table-column>
+        <el-table-column
+                property="stime"
+                label="起始时间"
+                width="180">
+        </el-table-column>
+        <el-table-column
+                property="etime"
+                label="结束时间"
+                width="180">
+        </el-table-column>
+        <el-table-column
+                property="reason"
+                label="请假原因">
+        </el-table-column>
+    </el-table>
+
+    <el-dialog title="请假审批" v-model="dialogFormVisible" width="500px" center>
+        <el-descriptions  :column="2" border>
+            <el-descriptions-item label="部门">{{currentRow.department_name}}</el-descriptions-item>
+            <el-descriptions-item label="姓名">{{currentRow.name}}</el-descriptions-item>
+            <el-descriptions-item label="起始时间" >{{currentRow.stime}}</el-descriptions-item>
+            <el-descriptions-item label="结束时间" >{{currentRow.etime}}</el-descriptions-item>
+            <el-descriptions-item label="请假原因" :span="2">
+                {{currentRow.reason}}
+            </el-descriptions-item>
+        </el-descriptions>
+
+
+        <div class="info" >
+            <el-form :model="form" ref="auditForm">
+                <el-select v-model="form.result" placeholder="是否同意" style="width: 100%">
+                    <el-option label="同意" value="approved"></el-option>
+                    <el-option label="驳回" value="refused"></el-option>
+                </el-select>
+                <el-input v-model="form.reason" placeholder="请输入审批意见" autocomplete="off"></el-input>
+            </el-form>
+            <span class="dialog-footer">
+              <el-button type="primary" v-on:click="onSubmit('auditForm')" style="width: 100%">确认提交</el-button>
+            </span>
+        </div>
+    </el-dialog>
+</div>
+
+<script>
+    function formatDate(time){
+        var newDate = new Date(time);
+        return newDate.getFullYear() + "-" +
+            (newDate.getMonth() + 1) + "-" + newDate.getDate()
+            + " " + newDate.getHours() + "时";
+    }
+
+    var Main = {
+        data() {
+            return {
+                dialogFormVisible: false,
+                form: {
+                    result:"approved",
+                    reason:""
+                },
+                formLabelWidth: '120px',
+                tableData: [{
+                    ctime:"2021-5-29 18时",
+                    ftype:"事假",
+                    stime:"2021-5-31 0时",
+                    etime:"2021-6-3 0时",
+                    department_name:"研发部",
+                    name:"王美美",
+                    reason:"测试数据"
+                }],
+                currentRow: null
+            }
+        }
+        ,methods: {
+            handleCurrentChange(val) {
+                this.currentRow = val;
+                console.info(val);
+                this.dialogFormVisible = true;
+            }
+        }
+    };
+    const app = Vue.createApp(Main);
+    app.use(ElementPlus);
+    app.mount("#app")
+</script>
+
+</body>
+</html>
