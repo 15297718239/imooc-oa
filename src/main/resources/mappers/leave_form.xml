@@ -21,4 +21,11 @@
                 and pf.operator_id = #{pf_operator_id}
             </if>
     </select>
+    <update id="update" parameterType="com.imooc.oa.entity.LeaveForm">
+        UPDATE adm_leave_form SET employee_id = #{employeeId} , form_type = #{formType}, start_time = #{startTime}, end_time = #{endTime}, reason = #{reason}, state = #{state} ,create_time = #{createTime} WHERE form_id = #{formId}
+    </update>
+
+    <select id="selectById" parameterType="Long" resultType="com.imooc.oa.entity.LeaveForm">
+       select * from adm_leave_form where form_id = #{value}
+    </select>
 </mapper>
