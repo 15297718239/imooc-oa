@@ -2,13 +2,16 @@ package com.imooc.oa.service;
 
 import com.imooc.oa.entity.Employee;
 import com.imooc.oa.entity.LeaveForm;
+import com.imooc.oa.entity.Notice;
 import com.imooc.oa.entity.ProcessFlow;
 import com.imooc.oa.mapper.EmployeeMapper;
 import com.imooc.oa.mapper.LeaveFormMapper;
+import com.imooc.oa.mapper.NoticeMapper;
 import com.imooc.oa.mapper.ProcessFlowMapper;
 import com.imooc.oa.service.exception.LeaveFormException;
 import com.imooc.oa.utils.MybatisUtils;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +36,7 @@ public class LeaveFormService {
             }
             LeaveFormMapper leaveFormMapper = sqlSession.getMapper(LeaveFormMapper.class);
             leaveFormMapper.insert(form);
+            NoticeMapper noticeMapper = sqlSession.getMapper(NoticeMapper.class);
             //2.增加第一条流程数据,说明表单已提交,状态为complete
             ProcessFlowMapper processFlowMapper = sqlSession.getMapper(ProcessFlowMapper.class);
             ProcessFlow flow1 = new ProcessFlow();
@@ -44,6 +48,7 @@ public class LeaveFormService {
             flow1.setState("complete");
             flow1.setIsLast(0);
             processFlowMapper.insert(flow1);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH时");
             //3.分情况创建其余流程数据
             //3.1 7级以下员工,生成部门经理审批任务,请假时间大于等于72小时,还需生成总经理审批任务
             if(employee.getLevel() < 7){
@@ -74,6 +79,10 @@ public class LeaveFormService {
                     flow2.setIsLast(1);
                     processFlowMapper.insert(flow2);
                 }
+                String notice1 = String.format("您的请假申请[%s-%s]已提交,请等待上级审批.", sdf.format(form.getStartTime()), sdf.format(form.getEndTime()));
+                noticeMapper.insert(new Notice(employee.getEmployeeId(),notice1));
+                String notice2 = String.format("%s-%s提起请假申请[%s-%s],请尽快审批", employee.getTitle(), employee.getName(), sdf.format(form.getStartTime()), sdf.format(form.getEndTime()));
+                noticeMapper.insert(new Notice(dmanager.getEmployeeId(),notice2));
             }else if(employee.getLevel() == 7){
                 //3.2 7级员工,仅生成总经理审批任务
                 Employee manager = employeeService.selectLeader(employee.getEmployeeId());
@@ -86,6 +95,15 @@ public class LeaveFormService {
                 flow2.setOrderNo(2);
                 flow2.setIsLast(1);
                 processFlowMapper.insert(flow2);
+                //请假单已提交消息
+                String notice1 = String.format("您的请假申请[%s-%s]已提交,请等待上级审批."
+                        , sdf.format(form.getStartTime()), sdf.format(form.getEndTime()));
+                noticeMapper.insert(new Notice(employee.getEmployeeId(),notice1));
+
+                //通知总经理审批消息
+                String notice2 = String.format("%s-%s提起请假申请[%s-%s],请尽快审批",
+                        employee.getTitle() , employee.getName() ,sdf.format(form.getStartTime()),sdf.format(form.getEndTime()));
+                noticeMapper.insert(new Notice(manager.getEmployeeId(),notice2));
             }else if(employee.getLevel() == 8){
                 //3.3 8级员工,生成总经理审批任务,系统自动通过
                 ProcessFlow flow2 = new ProcessFlow();
@@ -100,6 +118,9 @@ public class LeaveFormService {
                 flow2.setOrderNo(2);
                 flow2.setIsLast(1);
                 processFlowMapper.insert(flow2);
+                String noticeContent = String.format("您的请假申请[%s-%s]系统已自动批准通过." ,
+                        sdf.format(form.getStartTime()) , sdf.format(form.getEndTime()));
+                noticeMapper.insert(new Notice(employee.getEmployeeId(),noticeContent));
             }
 
 
@@ -148,13 +169,33 @@ public class LeaveFormService {
                 process.setAuditTime(new Date());
                 processFlowMapper.update(process);
             }
-
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH时");
             LeaveFormMapper leaveFormMapper = sqlSession.getMapper(LeaveFormMapper.class);
+            NoticeMapper noticeMapper = sqlSession.getMapper(NoticeMapper.class);
             LeaveForm form = leaveFormMapper.selectById(formId);
+            Employee operator = employeeService.selectById(operatorId);
+            Employee employee = employeeService.selectById(form.getEmployeeId());
             //如果当前任务是最后一个节点,代表流程结束,更新请假单状态为对应的approved/refused
             if(process.getIsLast() == 1){
                 form.setState(result); //approved / refused
                 leaveFormMapper.update(form);
+                String strResult = null;
+                if(result.equals("approved")){
+                    strResult = "批准";
+                }else if(result.equals("refused")){
+                    strResult = "驳回";
+                }
+                String notice1 = String.format("您的请假申请[%s-%s]%s%s已%s,审批意见:%s,审批流程已结束"
+                        ,sdf.format(form.getStartTime()),sdf.format(form.getEndTime())
+                        ,operator.getTitle(),operator.getName() ,strResult,reason
+                );
+                noticeMapper.insert(new Notice(form.getEmployeeId(), notice1));
+
+                String notice2 = String.format("%s-%s提起请假申请[%s-%s]您已%s,审批意见:%s,审批流程已结束" ,
+                        employee.getTitle() , employee.getName() , sdf.format( form.getStartTime()) , sdf.format(form.getEndTime()),
+                        strResult , reason);//发给审批人的通知
+                noticeMapper.insert(new Notice(operator.getEmployeeId(),notice2));
+
             }else{
                 ////readyList包含所有后续任务节点
                 List<ProcessFlow> readyList = flowList.stream().filter(p -> p.getState().equals("ready")).collect(Collectors.toList());
@@ -163,6 +204,22 @@ public class LeaveFormService {
                     ProcessFlow readyProcess = readyList.get(0);
                     readyProcess.setState("process");
                     processFlowMapper.update(readyProcess);
+                    //消息1: 通知表单提交人,部门经理已经审批通过,交由上级继续审批
+                    String notice1 = String.format("您的请假申请[%s-%s]%s%s已批准,审批意见:%s ,请继续等待上级审批" ,
+                            sdf.format(form.getStartTime()) , sdf.format(form.getEndTime()),
+                            operator.getTitle() , operator.getName(),reason);
+                    noticeMapper.insert(new Notice(form.getEmployeeId(),notice1));
+
+                    //消息2: 通知总经理有新的审批任务
+                    String notice2 = String.format("%s-%s提起请假申请[%s-%s],请尽快审批" ,
+                            employee.getTitle() , employee.getName() , sdf.format( form.getStartTime()) , sdf.format(form.getEndTime()));
+                    noticeMapper.insert(new Notice(readyProcess.getOperatorId(),notice2));
+
+                    //消息3: 通知部门经理(当前经办人),员工的申请单你已批准,交由上级继续审批
+                    String notice3 = String.format("%s-%s提起请假申请[%s-%s]您已批准,审批意见:%s,申请转至上级领导继续审批" ,
+                            employee.getTitle() , employee.getName() , sdf.format( form.getStartTime()) , sdf.format(form.getEndTime()), reason);
+                    noticeMapper.insert(new Notice(operator.getEmployeeId(),notice3));
+
                 }else if(result.equals("refused")){
                     //如果当前任务不是最后一个节点且审批驳回,则后续所有任务状态变为cancel,请假单状态变为refused
                     for(ProcessFlow p:readyList){
@@ -171,6 +228,16 @@ public class LeaveFormService {
                     }
                     form.setState("refused");
                     leaveFormMapper.update(form);
+                    //消息1: 通知申请人表单已被驳回
+                    String notice1 = String.format("您的请假申请[%s-%s]%s%s已驳回,审批意见:%s,审批流程已结束" ,
+                            sdf.format(form.getStartTime()) , sdf.format(form.getEndTime()),
+                            operator.getTitle() , operator.getName(),reason);
+                    noticeMapper.insert(new Notice(form.getEmployeeId(),notice1));
+
+                    //消息2: 通知经办人表单"您已驳回"
+                    String notice2 = String.format("%s-%s提起请假申请[%s-%s]您已驳回,审批意见:%s,审批流程已结束" ,
+                            employee.getTitle() , employee.getName() , sdf.format( form.getStartTime()) , sdf.format(form.getEndTime()), reason);
+                    noticeMapper.insert(new Notice(operator.getEmployeeId(),notice2));
                 }
 
             }
