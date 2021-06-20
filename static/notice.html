@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>系统通知</title>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" type="text/css" href="/assets/element-plus/index.css">
+    <!-- 引入组件库 -->
+    <script src="/assets/vue/vue.global.js"></script>
+    <script src="/assets/element-plus/index.full.js"></script>
+    <script src="/assets/axios/axios.js"></script>
+
+</head>
+<body>
+<div id="app">
+    <h2>系统通知</h2>
+    <el-table
+            ref="singleTable"
+            :data="tableData"
+            highlight-current-row
+            style="width: 100%">
+        <el-table-column
+                property="index"
+                label="序号"
+                width="50">
+        </el-table-column>
+        <el-table-column
+                property="ctime"
+                label="通知时间"
+                width="180">
+        </el-table-column>
+
+        <el-table-column
+                property="content"
+                label="通知内容">
+        </el-table-column>
+    </el-table>
+
+</div>
+
+<script>
+
+    var Main = {
+        data() {
+            return {
+                tableData: []
+            }
+        }
+        ,mounted() {
+            const objApp = this;
+            axios.get("/api/notice/list?eid=" + sessionStorage.eid)
+                .then(function (response) {
+                    objApp.tableData.splice(0, objApp.tableData.length);
+                    response.data.data.list.forEach(function (item,index) {
+                        var date = new Date(item.createTime);
+                        item.ctime = date.getFullYear() + "-" +
+                            (date.getMonth() + 1) + "-" + date.getDate()
+                            + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+                        item.index = index + 1;
+                        objApp.tableData.push(item);
+                    });
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+        }
+    };
+    const app = Vue.createApp(Main);
+    app.use(ElementPlus);
+    app.mount("#app")
+</script>
+
+</body>
+</html>
