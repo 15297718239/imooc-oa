@@ -17,6 +17,7 @@ import java.util.Map;
 @WebServlet("/api/leave/*")
 public class LeaveFormServlet extends HttpServlet {
     private LeaveFormService leaveFormService = new LeaveFormService();
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         this.doPost(request, response);
@@ -29,14 +30,15 @@ public class LeaveFormServlet extends HttpServlet {
         //http://localhost/api/leave/create
         String uri = request.getRequestURI();
         String methodName = uri.substring(uri.lastIndexOf("/") + 1);
-        if(methodName.equals("create")){
+        if (methodName.equals("create")) {
             this.create(request, response);
-        }else if(methodName.equals("list")){
+        } else if (methodName.equals("list")) {
             this.list(request, response);
-        }else if(methodName.equals("audit")){
-
+        } else if (methodName.equals("audit")) {
+            this.audit(request, response);
         }
     }
+
     private void create(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String strEmployeeId = request.getParameter("eid");
         String formType = request.getParameter("formType");
@@ -55,7 +57,7 @@ public class LeaveFormServlet extends HttpServlet {
         try {
             leaveFormService.createLeaveForm(form);
             resp = new ResponseUtils();
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             resp = new ResponseUtils(e.getClass().getSimpleName(), e.getMessage());
         }
@@ -69,9 +71,25 @@ public class LeaveFormServlet extends HttpServlet {
         try {
             List<Map> formList = leaveFormService.getLeaveFormList("process", Long.parseLong(employeeId));
             resp = new ResponseUtils().put("list", formList);
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp = new ResponseUtils(e.getClass().getSimpleName(), e.getMessage());
+        }
+        response.getWriter().println(resp.toJsonString());
+    }
+
+    private void audit(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String formId = request.getParameter("formId");
+        String result = request.getParameter("result");
+        String reason = request.getParameter("reason");
+        String eid = request.getParameter("eid");
+        ResponseUtils resp = null;
+        try {
+            leaveFormService.audit(Long.parseLong(formId), Long.parseLong(eid), result, reason);
+            resp = new ResponseUtils();
         }catch (Exception e){
             e.printStackTrace();
-            resp = new ResponseUtils(e.getClass().getSimpleName() , e.getMessage());
+            resp = new ResponseUtils(e.getClass().getSimpleName(), e.getMessage());
         }
         response.getWriter().println(resp.toJsonString());
     }

@@ -128,7 +128,34 @@
                 console.info(val);
                 this.dialogFormVisible = true;
             }
+            ,onSubmit(formName){
+                const objApp = this;
+                this.$refs[formName].validate(function(valid){
+                    if(valid){
+                        const params = new URLSearchParams();
+                        params.append("formId", objApp.currentRow.form_id);
+                        params.append("result", objApp.form.result);
+                        params.append("reason", objApp.form.reason);
+                        params.append("eid", sessionStorage.eid);
+                        axios.post("/api/leave/audit" , params)
+                            .then(function(response){
+                                const json = response.data;
+                                console.info(json);
+                                if(json.code=="0"){
+                                    objApp.$alert("请假已审批完毕" , {
+                                        callback:function(){
+                                            window.location.href = "/notice.html";
+                                        }
+                                    })
+                                }else{
+                                    objApp.$message.error({message:json.message,offset:100})
+                                }
+                            })
+                    }
+                })
+            }
         }
+
         ,mounted(){
             const objApp = this;
             const $message = this.$message;
